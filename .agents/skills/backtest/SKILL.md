@@ -40,10 +40,11 @@ description: |
 - jupytext percent 格式：手写 `notebook.py`（`# %% [markdown]` / `# %%`），
   `uv run jupytext --sync` 生成 ipynb，`uv run jupyter nbconvert --to notebook
   --execute --inplace` 执行。不直接编辑 .ipynb JSON。
-- 七段叙事结构：① 策略动机与经济解释 ② 数据与假设 ③ 方法（核心代码逐段讲）
-  ④ 结果 ⑤ 敏感性分析 ⑥ 局限性 ⑦ 复现方法。
+- 七段叙事结构与写作人味遵循 `trading-humanizer` skill：① 策略动机与经济解释（人味引子 + 收益/风险本质）
+  ② 怎么操作（保姆级实操手把手） ③ 数据与假设 ④ 方法（核心代码逐段讲）
+  ⑤ 结果 ⑥ 敏感性分析 ⑦ 局限性与复现方法。
 - 方法节必须含数学推导：定价/信号/费用/指标计算的公式用 LaTeX 写在 markdown cell
-  （`$$...$$`），公式后紧跟对应代码，一一对应，读者能对上。
+  （`$$...$$` 独立成段），公式后紧跟对应代码，一一对应，读者能对上。**严禁**在正文行内把单个变量写成 `$$S$$`（用斜体 `*S*` 或代码块）。
 - 结果节开头必须放标准回测数据卡片（指标集与模板见 `data-viz` skill），
   README 同样要有一张。
 - 正文数字一律从运行结果计算插入（f-string/Markdown 插值），不硬编码。
@@ -68,6 +69,6 @@ description: |
 - [ ] `uv run` 下回测脚本和 notebook 端到端无报错
 - [ ] TASK.md 验收标准逐项核对通过（不通过要查根因，不许改逻辑凑数）
 - [ ] results/ 产物齐全（汇总 CSV、逐笔 CSV、图）
-- [ ] notebook 正文无硬编码数字、局限性非空
+- [ ] notebook 正文无硬编码数字、局限性非空、文字与排版遵循 `trading-humanizer`
 - [ ] README 有 Colab badge，下载脚本可独立运行
-- [ ] 画图遵循 `data-viz` skill
+- [ ] 画图遵循 `data-viz` skill，研究图表全量导出不留遗憾

@@ -30,4 +30,5 @@
 
 - 接回测任务时先读项目级 skill `.agents/skills/backtest/SKILL.md`。
 - 画图遵循项目级 skill `.agents/skills/data-viz/SKILL.md`。
+- 策略复盘与交易博客写作遵循项目级 skill `.agents/skills/trading-humanizer/SKILL.md`。
 - 环境用 uv：`uv sync` 后一律 `uv run ...`。
