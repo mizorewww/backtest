@@ -1,0 +1,15 @@
+[project]
+name = "backtest"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas>=3.0.5",
+    "numpy>=2.5.2",
+    "matplotlib>=3.11.1",
+    "pyarrow>=25.0.1",
+    "requests>=2.32.0",
+    "jupyter>=1.1.0",
+    "jupytext>=1.16.0",
+    "nbconvert>=7.16.0",
+    "ipykernel>=6.29.0",
+]
