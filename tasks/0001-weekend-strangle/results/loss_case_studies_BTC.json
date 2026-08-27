@@ -1,0 +1,74 @@
+[
+  {
+    "date": "2023-01-20",
+    "loss_type": "Type 2: Upside Short Squeeze (Call Breached)",
+    "pnl_base": -0.0596,
+    "spot_move_pct": 8.31,
+    "intraday_swing_pct": 9.39,
+    "strikes": "C: $21,250 / P: $21,000",
+    "description": "现货暴涨 +8.31% 冲破 Call 行权价 $21,250，空头踩踏导致深实值"
+  },
+  {
+    "date": "2025-10-10",
+    "loss_type": "Type 1: Downside Tail Crash (Put Breached)",
+    "pnl_base": -0.0477,
+    "spot_move_pct": -6.22,
+    "intraday_swing_pct": 7.12,
+    "strikes": "C: $120,000 / P: $118,000",
+    "description": "现货大跌 -6.22% 跌破 Put 行权价 $118,000，币本位负伽马与价值损失"
+  },
+  {
+    "date": "2024-04-12",
+    "loss_type": "Type 1: Downside Tail Crash (Put Breached)",
+    "pnl_base": -0.0465,
+    "spot_move_pct": -6.82,
+    "intraday_swing_pct": 9.9,
+    "strikes": "C: $70,000 / P: $68,500",
+    "description": "现货大跌 -6.82% 跌破 Put 行权价 $68,500，币本位负伽马与价值损失"
+  },
+  {
+    "date": "2023-01-13",
+    "loss_type": "Type 2: Upside Short Squeeze (Call Breached)",
+    "pnl_base": -0.0454,
+    "spot_move_pct": 7.51,
+    "intraday_swing_pct": 9.74,
+    "strikes": "C: $19,500 / P: $19,000",
+    "description": "现货暴涨 +7.51% 冲破 Call 行权价 $19,500，空头踩踏导致深实值"
+  },
+  {
+    "date": "2025-01-31",
+    "loss_type": "Type 1: Downside Tail Crash (Put Breached)",
+    "pnl_base": -0.0422,
+    "spot_move_pct": -5.46,
+    "intraday_swing_pct": 5.64,
+    "strikes": "C: $106,000 / P: $105,000",
+    "description": "现货大跌 -5.46% 跌破 Put 行权价 $105,000，币本位负伽马与价值损失"
+  },
+  {
+    "date": "2026-01-30",
+    "loss_type": "Type 1: Downside Tail Crash (Put Breached)",
+    "pnl_base": -0.0339,
+    "spot_move_pct": -5.35,
+    "intraday_swing_pct": 7.89,
+    "strikes": "C: $83,000 / P: $82,000",
+    "description": "现货大跌 -5.35% 跌破 Put 行权价 $82,000，币本位负伽马与价值损失"
+  },
+  {
+    "date": "2024-08-02",
+    "loss_type": "Type 1: Downside Tail Crash (Put Breached)",
+    "pnl_base": -0.0211,
+    "spot_move_pct": -4.72,
+    "intraday_swing_pct": 4.89,
+    "strikes": "C: $64,500 / P: $62,500",
+    "description": "现货大跌 -4.72% 跌破 Put 行权价 $62,500，币本位负伽马与价值损失"
+  },
+  {
+    "date": "2024-08-23",
+    "loss_type": "Type 2: Upside Short Squeeze (Call Breached)",
+    "pnl_base": -0.0176,
+    "spot_move_pct": 3.82,
+    "intraday_swing_pct": 4.42,
+    "strikes": "C: $62,000 / P: $61,000",
+    "description": "现货暴涨 +3.82% 冲破 Call 行权价 $62,000，空头踩踏导致深实值"
+  }
+]

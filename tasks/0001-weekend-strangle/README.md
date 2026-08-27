@@ -42,10 +42,11 @@ ETH call 0.40 / put 0.55（CAGR 47.5%，Calmar 4.27）。
 ```bash
 uv sync
 cd tasks/0001-weekend-strangle
-uv run download_data.py   # 缺数据时从 Deribit 下载；有缓存则跳过
-uv run backtest.py        # 12 档 delta × BTC/ETH → results/
-uv run optimize.py        # 复利 + 非对称网格 + 回撤区间
-uv run make_report.py     # results/report.html
+uv run download_data.py       # 缺数据时从 Deribit 下载；有缓存则跳过
+uv run backtest.py            # 12 档 delta × BTC/ETH → results/
+uv run optimize.py            # 复利 + 非对称网格 + 回撤区间
+uv run advanced_analysis.py    # 运行全套进阶量化检验（对照组、盘中路径、OOS、稳定性）
+uv run make_report.py         # results/report.html
 ```
 
 数据根目录默认 `/Volumes/trade/data`，可用环境变量 `TRADE_DATA_ROOT` 覆盖。
@@ -57,4 +58,6 @@ Notebook 维护流程：改 `notebook.py` 后
 `results/` 下：`grid_deribit_{BTC,ETH}.csv`（12 档汇总）、
 `trades_deribit_*_d*.csv`（24 个逐笔文件）、`equity_deribit_*.png`（累计 PnL 曲线）、
 `compound_sym_*.csv` / `compound_asym_*.csv`（复利与非对称网格）、
-`heatmap_*.png`（热图）、`drawdowns_*.csv`（回撤区间）、`report.html`（自包含报告）。
+`vrp_weekday_control_*.csv`（工作日对照组）、`intraday_margin_stress_*.csv`（盘中保证金与强平模拟）、
+`walk_forward_*.csv`（纯样本外滚动测试）、`leave_one_tail_out_*.csv`（极端事件敏感度）、
+`loss_taxonomy_*.csv`（四大亏损类型分类）、`heatmap_*.png`（热图）、`report.html`（自包含报告）。
