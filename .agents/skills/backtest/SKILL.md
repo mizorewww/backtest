@@ -22,7 +22,7 @@ description: |
 3. **准备数据**（见下节）。
 4. **写回测代码**，跑通并核对 TASK.md 验收标准。
 5. **写教学 notebook**（见下节），同步执行。
-6. **写 README**：结果要点表 + Colab badge。
+6. **写 README**：标准数据卡片 + Colab badge。
 7. **过验收门禁**（见末节），然后汇报：结果要点、与预期是否一致、局限性。
 
 ## 数据
@@ -42,6 +42,10 @@ description: |
   --execute --inplace` 执行。不直接编辑 .ipynb JSON。
 - 七段叙事结构：① 策略动机与经济解释 ② 数据与假设 ③ 方法（核心代码逐段讲）
   ④ 结果 ⑤ 敏感性分析 ⑥ 局限性 ⑦ 复现方法。
+- 方法节必须含数学推导：定价/信号/费用/指标计算的公式用 LaTeX 写在 markdown cell
+  （`$$...$$`），公式后紧跟对应代码，一一对应，读者能对上。
+- 结果节开头必须放标准回测数据卡片（指标集与模板见 `data-viz` skill），
+  README 同样要有一张。
 - 正文数字一律从运行结果计算插入（f-string/Markdown 插值），不硬编码。
 - Colab 引导 cell：检测 `google.colab` → clone 仓库 → cd 到任务目录 → 数据缺失
   时跑下载脚本。notebook 必须在 Colab 端到端可跑。

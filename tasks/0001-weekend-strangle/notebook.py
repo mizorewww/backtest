@@ -130,33 +130,73 @@ for cur in ("BTC", "ETH"):
 # ## 3. 方法
 #
 # 策略逻辑全部在本目录的 `backtest.py` 里，notebook 直接 import，不重复实现。
-# 核心是三段：**BS 定价**、**IV 反推**、**按 delta 选合约**。
+# 核心分四段讲：**BS 定价**（3.1）、**IV 反推**（3.2）、**按 delta 选合约**、
+# **币本位结算与费用**（3.3）。每段先给公式、逐个符号解释，再给对应代码。
+
+# %% [markdown]
+# ### 3.1 BS 定价与 delta（r = 0）
+#
+# 期限极短（40 小时），取无风险利率 $r=0$，Black-Scholes 公式退化为：
+#
+# $$d_1 = \frac{\ln(S/K) + \tfrac{1}{2}\sigma^2 T}{\sigma\sqrt{T}}, \qquad d_2 = d_1 - \sigma\sqrt{T}$$
+#
+# $$C = S\,N(d_1) - K\,N(d_2), \qquad P = K\,N(-d_2) - S\,N(-d_1)$$
+#
+# 符号逐个解释：
+#
+# - $S$：入场时标的现货价（USD），即周五 16:00 UTC 的 BTC/ETH 价格；
+# - $K$：行权价（USD）；
+# - $\sigma$：年化隐含波动率（由 3.2 节从成交价反推）；
+# - $T$：到期期限（年），本策略 $T = 40/(365 \times 24) \approx 0.00457$
+#   （周五 16:00 → 周日 08:00 UTC）；
+# - $N(\cdot)$：标准正态分布的累积分布函数；
+# - $C, P$：1 单位名义的 call / put 的 USD 理论价值。
+#
+# $r=0$ 的合理性：$T$ 只有 40 小时，贴现因子 $e^{-rT}$ 与 1 的差异可忽略，
+# 远期价 $Se^{rT}$ 即现货价；这也让权利金的币本位/USD 换算更干净。
+#
+# delta（对 $S$ 的一阶偏导）在同一假设下为：
+#
+# $$\Delta_C = N(d_1), \qquad \Delta_P = N(d_1) - 1$$
+#
+# 选合约规则：在候选池中取 $|\Delta - \Delta^*|$ 最小的行权价，
+# call 目标 $\Delta^* = +0.35$，put 目标 $\Delta^* = -0.35$（基准档）。
 
 # %%
 import inspect
 
-from backtest import bs_price, bs_delta, invert_iv
+from backtest import bs_price, bs_delta, invert_iv, run_backtest
 
 print(inspect.getsource(bs_price))
 print(inspect.getsource(bs_delta))
 
 # %% [markdown]
-# `bs_price` / `bs_delta` 是 r=0 的 Black-Scholes：
+# 对应上面的公式：`bs_price` 里 `sq` $= \sigma\sqrt{T}$，`d1`、`d2` 与
+# 两式逐一对应；`sigma <= 0` 的分支是 $\sigma \to 0$ 的极限——价格退化为
+# 内在价值。`bs_delta` 复用同一个 $d_1$ 算 $N(d_1)$。
+
+# %% [markdown]
+# ### 3.2 IV 二分反推
 #
-# - r=0 的合理性：T 只有 40 小时，贴现与远期定价的影响可忽略；
-#   这也让权利金的币本位/USD 换算更干净。
-# - delta 定义：call 的 delta 是 $N(d_1)$，put 是 $N(d_1)-1$。
-#   目标档位 0.35 指 call 选 delta 最接近 +0.35 的行权价、put 选最接近 −0.35 的。
+# 入场成交价 $P_{mkt}$（USD）是观测值，隐含波动率 $\sigma^*$ 是它的反函数：
+#
+# $$\text{求 } \sigma^* \text{ 使 } V_{BS}(\sigma^*;\, S, K, T) = P_{mkt}$$
+#
+# BS 价格对 $\sigma$ 严格单调递增（vega $> 0$），所以方程有唯一解，
+# 在 $[\sigma_{lo}, \sigma_{hi}] = [10^{-3},\, 6]$ 上二分 60 次即可收敛到
+# 任意精度。两类腿被剔除、不参与选合约：
+#
+# - $P_{mkt} \le V_{BS}(0)$：价格低于内在价值（数据噪音或陈旧价）；
+# - $V_{BS}(\sigma_{hi}) < P_{mkt}$：价格高到 IV = 6（年化 600%）都够不着。
+#
+# 反推出的 $\sigma^*$ 同时用于 3.1 节算 delta，保证定价口径自洽。
 
 # %%
 print(inspect.getsource(invert_iv))
 
 # %% [markdown]
-# `invert_iv` 用二分法把入场成交价（USD）反推成隐含波动率：
-#
-# - 先剔除"价格低于内在价值"（数据噪音或陈旧价）和"价格高到 IV>6 都够不着"
-#   的腿——这些腿不参与选合约。
-# - 反推出的 IV 同时用于算 delta，保证定价口径自洽。
+# `bs_price(s, k, 0.0, side)` 即内在价值 $V_{BS}(0)$；循环里的中点更新
+# 就是上面单调性二分：理论价低于市价则抬下界，否则压上界。
 
 # %% [markdown]
 # 用一个真实的周末走一遍选合约流程：
@@ -175,9 +215,38 @@ print(f"选中 {chosen['name']}：delta={chosen['delta']:.3f}，IV={chosen['iv']
 print(f"自洽性检验：成交价 {chosen['price'] * s0:.2f} USD vs 用反推 IV 重定价 {reprice:.2f} USD")
 
 # %% [markdown]
-# 每一周、每一条腿都重复上述过程；随后持有到周日 08:00 UTC，
-# 按官方交割价结算：`payoff = max(S_T−K, 0)/S_T`（call，put 对称，币本位），
-# 再扣开仓费与（ITM 时的）行权费，得到单周 PnL。
+# ### 3.3 币本位 payoff 与费用模型
+#
+# Deribit 期权是币本位的：面值 1 币，权利金 $p$ 与到期赔付都以币计价、
+# 以币结算。卖方持有一张腿到期的币本位赔付为：
+#
+# $$\text{payoff}_C = \frac{\max(S_T - K,\ 0)}{S_T}, \qquad \text{payoff}_P = \frac{\max(K - S_T,\ 0)}{S_T}$$
+#
+# 其中 $S_T$ 是周日 08:00 UTC 的官方交割价（USD）；USD 赔付除以 $S_T$
+# 折成币。单腿卖方 PnL（币）为：
+#
+# $$\text{PnL}_{leg} = p - \text{payoff} - f_{open} - f_{settle}$$
+#
+# 费用按 Deribit 费率（名义 = 1 币，封顶 12.5%）：
+#
+# $$f_{open} = \min\big(0.0003,\ 0.125 \cdot p\big), \qquad f_{settle} = \mathbb{1}\{\text{payoff} > 0\} \cdot \min\big(0.00015,\ 0.125 \cdot \text{payoff}\big)$$
+#
+# - $f_{open}$：开仓费，名义的 0.03%，封顶权利金的 12.5%——深度虚值合约
+#   权利金极低时封顶生效（如 $p = 0.0005$ 时 $0.125p = 0.0000625 < 0.0003$）；
+# - $f_{settle}$：行权费，仅 ITM（payoff > 0）收取，名义的 0.015%，
+#   封顶 payoff 的 12.5%。
+#
+# 单周 PnL = call 腿 + put 腿的 $\text{PnL}_{leg}$ 之和。
+# 每一周都重复 3.1~3.3：反推 IV → 按 delta 选两腿 → 持有到期结算扣费。
+# 完整的逐周循环在 `run_backtest` 里：
+
+# %%
+print(inspect.getsource(run_backtest))
+
+# %% [markdown]
+# 对照 3.3 的公式看内层循环：`payoff` 即 $\max(\cdot)/S_T$，
+# `open_fee` / `settle_fee` 即两个带封顶的 $\min$，`leg_pnl` 即
+# $\text{PnL}_{leg}$；外层对每周重复，尾部汇总出网格表的一行。
 
 # %% [markdown]
 # ## 4. 结果
@@ -207,6 +276,45 @@ for cur in ("BTC", "ETH"):
     grids[cur].to_csv(RESULTS_DIR / f"grid_deribit_{cur}.csv", index=False)
     plot_grid(cur, curves, RESULTS_DIR / f"equity_deribit_{cur}.png")
     print(f"{cur}: {len(t)} 周已写入 results/")
+
+# %% [markdown]
+# ### 数据卡片（35Δ 基准档）
+#
+# 口径：**单利**（每周固定卖 1 张 strangle，PnL 直接累加，不再投资）、
+# **币本位**（PnL / 权利金 / 手续费的单位分别为 BTC / ETH）、样本为
+# 2022-09 ~ 2026-08 的每个周五（窗口与笔数以卡片第一行为准）。
+# 最大回撤为币本位累计 PnL 曲线的峰谷差（绝对口径，单位：币）。
+# 下面这张卡片由代码从 `results/trades_deribit_*_d35.csv` 计算生成，不手抄。
+
+# %%
+import numpy as np
+
+
+def perf_card(cur: str) -> dict:
+    """从 35Δ 逐笔 CSV 计算标准数据卡片的一列（指标集见 data-viz skill）。"""
+    t = pd.read_csv(RESULTS_DIR / f"trades_deribit_{cur}_d35.csv")
+    pnl = t["pnl"]
+    wins, losses = pnl[pnl > 0], pnl[pnl <= 0]
+    cum = pnl.cumsum()
+    ret = t["pnl_pct"]  # 单利口径下 = 币本位 PnL / 1 单位名义
+    return {
+        "样本窗口": f"{t['friday'].iloc[0]} ~ {t['friday'].iloc[-1]}",
+        "净利润（币）": f"{pnl.sum():+.3f}",
+        "交易数 / 胜率": f"{len(t)} / {(pnl > 0).mean():.1%}",
+        "盈利因子（总盈利/|总亏损|）": f"{wins.sum() / abs(losses.sum()):.2f}",
+        "最大回撤（币）": f"{(cum - cum.cummax()).min():.3f}",
+        "平均交易 / 平均盈利笔 / 平均亏损笔":
+            f"{pnl.mean():+.4f} / {wins.mean():+.4f} / {losses.mean():+.4f}",
+        "最好 / 最差单笔": f"{pnl.max():+.4f} / {pnl.min():+.4f}",
+        "Sharpe（周频 ×√52 年化）": f"{ret.mean() / ret.std() * np.sqrt(52):.2f}",
+        "总手续费（币）": f"{t['fees'].sum():.4f}",
+        "权利金留存率（净利润/权利金合计）": f"{pnl.sum() / t['premium_sum'].sum():.1%}",
+    }
+
+
+card = pd.DataFrame({cur: perf_card(cur) for cur in ("BTC", "ETH")})
+card.index.name = "指标"
+display(card)
 
 # %% [markdown]
 # ### 4.1 基准档位（35Δ）
