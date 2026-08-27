@@ -28,6 +28,6 @@
 
 ## 工作方式
 
-- 接回测任务时先读用户级 skill `~/.agents/skills/backtest/SKILL.md`。
-- 画图遵循用户级 skill `~/.agents/skills/data-viz/SKILL.md`。
+- 接回测任务时先读项目级 skill `.agents/skills/backtest/SKILL.md`。
+- 画图遵循项目级 skill `.agents/skills/data-viz/SKILL.md`。
 - 环境用 uv：`uv sync` 后一律 `uv run ...`。
